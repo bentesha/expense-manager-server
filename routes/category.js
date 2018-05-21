@@ -23,9 +23,10 @@ const router = express
   })
   .get("/:id", ({ app, params }, response) => {
     app.db
-      .select()
       .from(TABLE)
       .where({ id: params.id })
+      .select()
+      .first()
       .then(category => {
         if (!category) {
           response.sendStatus(404); //Not found

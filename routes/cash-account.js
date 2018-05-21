@@ -1,15 +1,16 @@
 const express = require("express");
 const jsonapi = require("jsonapi-serializer");
+const getAccountStore = require("../data/cash-account");
 
 const TABLE = "cash_account";
 
 let serializer = new jsonapi.Serializer("cash_accounts", {
   attributes: ["name", "type", "active", "balance", "openingBalance"],
-  keyForAttribute: 'camel-case'
+  keyForAttribute: "camel-case"
 });
 
 let deserializer = new jsonapi.Deserializer({
-  keyForAttribute: 'camelCase'
+  keyForAttribute: "camelCase"
 });
 
 const errorHandler = function(response, error) {
@@ -20,20 +21,16 @@ const errorHandler = function(response, error) {
 module.exports = express
   .Router()
   .get("/", ({ app }, response) => {
-    app.db
-      .from(TABLE)
-      .select()
+    getAccountStore(app.db)
+      .getAll()
       .then(accounts => {
         response.send(serializer.serialize(accounts));
       })
       .catch(errorHandler.bind(this, response));
   })
   .get("/:id", ({ app, params }, response) => {
-    app.db
-      .from(TABLE)
-      .where({ id: params.id })
-      .select()
-      .first()
+    getAccountStore(app.db)
+      .getById(params.id)
       .then(account => {
         if (!account) {
           response.sendStatus(404); //Not found
@@ -48,17 +45,18 @@ module.exports = express
       .deserialize(body)
       .then(data => {
         let { name, type, active, openingBalance } = data;
-        return app.db
-          .into(TABLE)
-          .insert({ name, type, active, openingBalance });
+        return getAccountStore(app.db).create({
+          name,
+          type,
+          active,
+          openingBalance
+        });
         then(([id]) => {
           if (openingBalance > 0) {
             //TODO set account opening balance
           }
-          return app.db
-            .from(TABLE)
-            .where({ id })
-            .select()
+          return getAccountStore(app.db)
+            .getById(id)
             .then(account => {
               response.json(serializer.serialize(account));
             });
@@ -67,34 +65,29 @@ module.exports = express
       .catch(errorHandler.bind(this, response));
   })
   .patch("/:id", ({ body, app, params }, response) => {
-    deserializer.deserialize(body).then(data => {
-      let { name, type, active } = data;
-      return app.db
-        .from(TABLE)
-        .where({ id: params.id })
-        .update({ name, type, active })
-        .then(count => {
-          if (count !== 1) {
-            response.sendStatus(404);
-          } else {
-            return app.db
-              .from(TABLE)
-              .where({ id: params.id })
-              .select()
-              .first()
-              .then(account => {
-                response.json(serializer.serialize(account));
-              });
-          }
-        });
-    })
-    .catch(errorHandler.bind(this, response));
+    deserializer
+      .deserialize(body)
+      .then(data => {
+        let { name, type, active } = data;
+        return getAccountStore(app.db)
+          .update(params.id, { name, type, active })
+          .then(count => {
+            if (count !== 1) {
+              response.sendStatus(404);
+            } else {
+              return getAccountStore(app.db)
+                .getById(params.id)
+                .then(account => {
+                  response.json(serializer.serialize(account));
+                });
+            }
+          });
+      })
+      .catch(errorHandler.bind(this, response));
   })
-  .delete("/:id", ({app, params}, response) => {
-    app.db
-      .from(TABLE)
-      .where({ id: params.id })
-      .delete()
+  .delete("/:id", ({ app, params }, response) => {
+    getAccountStore(app.db)
+      .delete(params.id)
       .then(count => {
         if (count !== 1) {
           response.sendStatus(404); //Not found

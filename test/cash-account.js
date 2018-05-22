@@ -1,5 +1,5 @@
 const expect = require("chai").expect;
-const getAccountStore = require("../data/cash-account");
+const getAccountStore = require("../data/account");
 const knexConfig = require("../knexfile");
 const knex = require('knex');
 

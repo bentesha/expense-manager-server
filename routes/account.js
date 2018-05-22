@@ -1,6 +1,6 @@
 const express = require("express");
 const jsonapi = require("jsonapi-serializer");
-const getAccountStore = require("../data/cash-account");
+const getAccountStore = require("../data/account");
 
 const TABLE = "cash_account";
 

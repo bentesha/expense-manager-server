@@ -3,5 +3,5 @@ const cashAccountRouter = require("./cash-account");
 
 module.exports = function(app) {
   app.use("/categories", categoryRouter);
-  app.use("/cash-accounts", cashAccountRouter);
+  app.use("/accounts", cashAccountRouter);
 };

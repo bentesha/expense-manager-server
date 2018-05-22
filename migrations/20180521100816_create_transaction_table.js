@@ -4,11 +4,8 @@ exports.up = function(knex, Promise) {
     table.date("date");
     table.string('type');
     table.integer("accountId");
-    table.integer("categoryId");
-    table.string("description");
     table.decimal("amountCredit", 10, 2);
     table.decimal("amountDebit", 10, 2);
-    table.decimal("amount", 10, 2);
     table.boolean('isCanceled');
   });
 };

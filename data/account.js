@@ -13,6 +13,7 @@ module.exports = function(db) {
       let allowedKeys = ["name", "type", "active", "openingBalance"];
       attributes = filterKeys(attributes, allowedKeys);
       attributes.balance = 0;
+      attributes.openingBalance = attributes.openingBalance || 0;
       let createdAccount = null;
       return db.transaction(trx => {
         return trx
@@ -46,10 +47,11 @@ module.exports = function(db) {
      * @param {Object} attributes
      */
     update(id, attributes) {
-      let allowedKeys = ["name", "type", "active"];
+      let allowedKeys = ["name", "type", "active", "balance"];
       attributes = filterKeys(attributes, allowedKeys);
       return db
         .from(TABLE)
+        .where({id})
         .update(attributes)
         .then(count => {
           if(count === 0){

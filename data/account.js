@@ -1,19 +1,21 @@
 const filterKeys = require("./utils/filterKeys");
 const getTransactionStore = require("./transaction");
+const accountBalanceType = require('./utils/accountBalanceType');
 
-const TABLE = "cash_account";
+const TABLE = "account";
 
 module.exports = function(db) {
   let dataStore = {
     /**
      * Add new cash accont
-     * @param {CashAccount} account
+     * @param {Account} account
      */
     create(attributes) {
       let allowedKeys = ["name", "type", "active", "openingBalance"];
       attributes = filterKeys(attributes, allowedKeys);
       attributes.balance = 0;
       attributes.openingBalance = attributes.openingBalance || 0;
+      attributes.isCredit = accountBalanceType(attributes.type) === 'credit';
       let createdAccount = null;
       return db.transaction(trx => {
         return trx

@@ -5,7 +5,7 @@ const knex = require('knex');
 
 describe("#cashAccountDataStore", function() {
   let db = knex(knexConfig.test);
-  const TABLE = "cash_account";
+  const TABLE = "account";
   let store = getAccountStore(db);
 
   let bankAccount = { name: "Bank Account", type: "Bank Account", active: 1 };
@@ -24,6 +24,7 @@ describe("#cashAccountDataStore", function() {
           expect(account).to.not.equal(null);
           expect(account).to.deep.include(bankAccount);
           expect(account).to.have.property("id");
+          expect(account.isCredit).to.equal(0);
           done();
         })
         .catch(done);

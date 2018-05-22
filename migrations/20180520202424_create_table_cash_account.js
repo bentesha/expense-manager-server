@@ -1,9 +1,3 @@
-const TABLE_NAME = 'account';
-const COL_NAME = 'name';
-const COL_TYPE = 'type';
-const COL_OPENING_BALANCE = 'openingBalance';
-const COL_BALANCE = 'balance';
-const COL_ACTIVE = 'active';
 
 exports.up = function(knex, Promise) {
   return knex.schema.createTable(TABLE_NAME, table => {

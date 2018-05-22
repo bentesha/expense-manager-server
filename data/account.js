@@ -1,10 +1,11 @@
-const filterKeys = require("./utils/filterKeys");
-const getTransactionStore = require("./transaction");
-const accountBalanceType = require('./utils/accountBalanceType');
+module.exports = function getAccountStore(db) {
 
-const TABLE = "account";
+  const filterKeys = require("./utils/filterKeys");
+  const accountBalanceType = require("./utils/accountBalanceType");
+  const getTransferStore = require("./account-transfer");
 
-module.exports = function(db) {
+  const TABLE = "account";
+
   let dataStore = {
     /**
      * Add new cash accont
@@ -15,8 +16,7 @@ module.exports = function(db) {
       attributes = filterKeys(attributes, allowedKeys);
       attributes.balance = 0;
       attributes.openingBalance = attributes.openingBalance || 0;
-      attributes.isCredit = accountBalanceType(attributes.type) === 'credit';
-      let createdAccount = null;
+      attributes.isCredit = accountBalanceType(attributes.type) === "credit";
       return db.transaction(trx => {
         return trx
           .into(TABLE)
@@ -29,17 +29,34 @@ module.exports = function(db) {
               .first();
           })
           .then(account => {
-            createdAccount = account;
-            if(account.openingBalance > 0){
-              return getTransactionStore(trx).createOpeningBalanceTransaction(
-                account.id,
-                attributes.openingBalance
-              );
+            if (account.openingBalance > 0) {
+              //Get equity account
+              return getAccountStore(trx)
+                .getByType("Equity")
+                .then(accounts => {
+                  if (accounts.length > 0) {
+                    return accounts[0];
+                  } else {
+                    return getAccountStore(trx).create({
+                      name: "Equity",
+                      type: "Equity"
+                    });
+                  }
+                })
+                .then(equityAccount => {
+                  return getTransferStore(trx).create({
+                    date: Date.now(),
+                    fromAccountId: equityAccount.id,
+                    toAccountId: account.id,
+                    amount: account.openingBalance,
+                    comments: "Opening Balance"
+                  });
+                })
+                .then(({toAccountId: id}) => {
+                  return getAccountStore(trx).getById(id);
+                });
             }
             return account;
-          })
-          .then(() => {
-            return createdAccount;
           });
       });
     },
@@ -53,10 +70,10 @@ module.exports = function(db) {
       attributes = filterKeys(attributes, allowedKeys);
       return db
         .from(TABLE)
-        .where({id})
+        .where({ id })
         .update(attributes)
         .then(count => {
-          if(count === 0){
+          if (count === 0) {
             return null;
           }
           return db
@@ -84,6 +101,13 @@ module.exports = function(db) {
         .where({ id: accountId })
         .select()
         .first();
+    },
+
+    getByType(accountType) {
+      return db
+        .from(TABLE)
+        .where({ type: accountType })
+        .select();
     },
 
     /**

@@ -29,6 +29,16 @@ describe("#cashAccountDataStore", function() {
         })
         .catch(done);
     });
+
+    it('should have balance equal to openingBalance', function(done){
+      let testAccount = Object.assign({openingBalance: 10000 }, bankAccount);
+      store.create(testAccount)
+      .then(account => {
+        expect(account.balance).to.equal(testAccount.openingBalance);
+        done()
+      })
+      .catch(done);
+    });
   });
 
   describe("#getById", function() {

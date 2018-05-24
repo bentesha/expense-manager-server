@@ -63,5 +63,17 @@ describe("#transactionStore", function() {
       })
       .catch(done);
     })
+  });
+
+  describe('#cancel', function(){
+    it('should void a transaction', async function(){
+      let testData = Object.assign({}, testTransaction);
+      testData.accountId = testAccount.id;
+      let trans = await transactionStore.create(testData);
+      let result = await transactionStore.cancel(trans.id);
+      expect(result).to.equal(true);
+      trans = await transactionStore.getById(trans.id);
+      expect(trans.isCanceled).to.be.ok;
+    });
   })
 });

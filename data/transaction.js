@@ -1,6 +1,7 @@
 
 const getAccountStore = require("./account");
 const filterKeys = require("./utils/filterKeys");
+const assert = require('assert');
 
 const TABLE = "transaction";
 
@@ -21,7 +22,7 @@ module.exports = function (db) {
       ];
       attributes = filterKeys(attributes, allowedKeys);
       attributes.isCanceled = false;
-
+      assert(attributes.accountId, 'accountId must be specified in attributes');
       return db
         .into(TABLE)
         .insert(attributes)
@@ -41,11 +42,11 @@ module.exports = function (db) {
     },
 
     cancel(transactionId) {
-      dataStore.get(transactionId).then(transaction => {
-        if (!transaction) {
+      return dataStore.getById(transactionId).then(transaction => {
+        if (!transaction || transaction.isCanceled) {
           return false;
         }
-        db
+        return db
           .from(TABLE)
           .update({ isCanceled: true })
           .where({ id: transactionId })
@@ -53,7 +54,7 @@ module.exports = function (db) {
             if (count === 0) {
               return false;
             }
-            return accountStore
+            return dataStore
               .updateAccountBalance(transaction.accountId)
               .then(() => {
                 return true;

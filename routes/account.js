@@ -4,7 +4,7 @@ const getAccountStore = require("../data/account");
 
 const TABLE = "cash_account";
 
-let serializer = new jsonapi.Serializer("cash_accounts", {
+let serializer = new jsonapi.Serializer("accounts", {
   attributes: ["name", "type", "active", "balance", "openingBalance"],
   keyForAttribute: "camel-case"
 });
